@@ -1,0 +1,11 @@
+{
+  "name": "ao-smartwallet",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/project-kardeshev/ao-smartwallet.git",
+  "license": "MIT",
+  "dependencies": {
+    "@permaweb/aoconnect": "^0.0.53",
+    "jest": "^29.7.0"
+  }
+}
