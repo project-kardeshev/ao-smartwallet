@@ -170,6 +170,29 @@ multisig.HandleGetMultisigSettings = function(msg)
     })
 end
 
+multisig.HandleGetTransactionQueue = function(msg)
+    ao.send({
+        Target = msg.From,
+        Data = json.encode(TransactionQueue),
+    })
+end
+
+multisig.HandleGetTransaction = function(msg)
+    local transaction = TransactionQueue[msg.Tags.TransactionId]
+    assert(transaction, "Transaction does not exist")
+    ao.send({
+        Target = msg.From,
+        Data = json.encode(transaction),
+    })
+end
+
+multisig.HandleGetTransactionHistory = function(msg)
+    ao.send({
+        Target = msg.From,
+        Data = json.encode(TransactionHistory),
+    })
+end
+
 multisig.cleanTransactionQueue = function(currentBlockHeight)
     for id, transaction in pairs(TransactionQueue) do
         if currentBlockHeight - tonumber(transaction.originalMessage["Block-Height"]) > 50 then

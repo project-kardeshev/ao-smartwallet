@@ -115,8 +115,19 @@ Adds a new transaction to the multisig wallet.
 | `callData`    | Object | The data for the transaction call.                    |
 | `callTags`    | Object | The tags for the transaction call.                    |
 
+
+#### `GetTransactionQueue(msg)`
+Returns the transaction queue for the contract
+
+
+#### `GetTransaction(msg)`
+Gets an individual transaction from the transaction queue.
+
+#### `GetTransactionHistory()`
+Returns the transaction history of the wallet.
+
 #### `ApproveTransaction(msg)`
-Approves a transaction added by another signer or 
+Approves a transaction added by another signer.
 
 ##### Tag arguments:
 | Tag           | Type   | Description                                           |
@@ -204,6 +215,14 @@ Adds a new asset to the blocklist, preventing updates from that assets and remov
 | Tag           | Type   | Description                                           |
 |---------------|--------|-------------------------------------------------------|
 | `Asset`       | String | The ID of the asset to block.                         |
+
+#### `RemoveAssetFromBlocklist(msg)`
+Removes an asset from the blocklist
+
+##### Tag arguments:
+| Tag           | Type   | Description                                           |
+|---------------|--------|-------------------------------------------------------|
+| `Asset`       | String | The ID of the asset to remove from blocklist          |
 
 #### `GetAssets(msg)`
 Retrieves the current list of assets.

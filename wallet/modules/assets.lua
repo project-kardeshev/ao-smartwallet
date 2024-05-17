@@ -27,6 +27,16 @@ assets.HandleAddAssetToBlocklist = function (msg)
     BlockList = blockList
 end
 
+assets.HandleRemoveAssetFromBlocklist = function (msg)
+    customUtils.assertSigner(msg)
+    local asset = msg.Tags.Asset
+    assert(asset, "No asset specified")
+    local blockList = BlockList
+    assert(not blockList[asset], "Asset is not in blocklist")
+    blockList[asset] = nil
+    BlockList = blockList
+end
+
 assets.HandleGetAssets = function (msg)
     local assetList = AssetList
     print("Sending asset list: " .. json.encode(assetList))
