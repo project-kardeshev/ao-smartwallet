@@ -13,11 +13,12 @@ export type InteractionCall = {
 export interface MercuriusRegistry {
   createWallet(params: {
     name: string, 
-    description: string
+    description: string,
+    owner: string
   }): Promise<WriteInteractionResult>
   getWallets(params: {
     address: string
-  }): Promise<WriteInteractionResult<{wallets: string[]}>>
+  }): Promise<string[]>
   removeWallet(params: {
     walletId: string
   }): Promise<WriteInteractionResult> 
@@ -67,7 +68,7 @@ registryId: string
   constructor({
     registryId,
     aoOptions
-  }:{
+    }:{
     registryId: string
     aoOptions?: any
   }) {
@@ -75,8 +76,9 @@ registryId: string
     this.registryId = registryId
   }
 // registry methods
-  async createWallet(params: {name: string, description: string}): Promise<WriteInteractionResult> {
-    const { id } = this.ao.message({
+  async createWallet(params: {name?: string, description?: string, owner: string}): Promise<WriteInteractionResult> {
+
+    const { id } = await this.ao.message({
       process: this.registryId,
       tags: [
         {name: 'Action', value: 'CreateWallet'},
@@ -87,31 +89,30 @@ registryId: string
     return { id }
 }
 
-async getWallets(params: {address: string}): Promise<WriteInteractionResult<{wallets: string[]}>> {
-  const { id, Data } = this.ao.dryrun({
+async getWallets(params: {address: string}): Promise<string[]> {
+  const { id, Data } = await this.readData({
     process: this.registryId,
-    tags: [
-      {name: 'Action', value: 'GetWallets'},
-      {name: 'Address', value: params.address}
-    ]
+    Action: 'GetWallets',
+    Address: params.address
   })
-  return {id ,wallets: JSON.parse(Data)}
+  return JSON.parse(Data)
 }
 
 async removeWallet(params: { walletId: string }): Promise<WriteInteractionResult<Record<string, string>>> {
-  return this.ao.message({
+  const { id } = await this.ao.message({
     process: this.registryId,
     tags: [
       {name: 'Action', value: 'RemoveWallet'},
       {name: 'Wallet', value: params.walletId}
     ]
   })
+  return { id }
 }
 
 // wallet methods
 
 async addTransaction(params: {wallet: string, to:string; callData: Record<string, any>, callTags: Array<Tag>}): Promise<WriteInteractionResult> {
-  return this.ao.message({
+  const { id } = await this.ao.message({
     process: params.wallet,
     data: JSON.stringify({
       callData: params.callData,
@@ -122,6 +123,63 @@ async addTransaction(params: {wallet: string, to:string; callData: Record<string
       {name: 'To', value: params.to}
     ]
   })
+  return { id }
 }
+
+async approveTransaction(params: {wallet: string, txid: string}): Promise<WriteInteractionResult> {
+  const { id } = await this.ao.message({
+    process: params.wallet,
+    tags: [
+      {name: 'Action', value: 'ApproveTransaction'},
+      {name: 'TransactionId', value: params.txid}
+    ]
+  })
+  return { id }
+}
+
+async addSigner(params: {wallet: string, address: string}): Promise<WriteInteractionResult> {
+  const { id } = await this.ao.message({
+    process: params.wallet,
+    tags: [
+      {name: 'Action', value: 'AddSigner'},
+      {name: 'Signer', value: params.address}
+    ]
+  })
+  return { id }
+}
+
+async removeSigner(params: {wallet: string, address: string}): Promise<WriteInteractionResult> {
+  const { id } = await this.ao.message({
+    process: params.wallet,
+    tags: [
+      {name: 'Action', value: 'RemoveSigner'},
+      {name: 'Signer', value: params.address}
+    ]
+  })
+  return { id }
+}
+
+async setThreshold(params: {wallet: string, threshold: number}): Promise<WriteInteractionResult> {
+  const { id } = await this.ao.message({
+    process: params.wallet,
+    tags: [
+      {name: 'Action', value: 'SetThreshold'},
+      {name: 'Threshold', value: params.threshold}
+    ]
+  })
+  return { id }
+
+}
+
+async getMultisigSettings(params: { wallet: string }): Promise<WriteInteractionResult<{ threshold: number; signers: string[] }>> {
+  const { id, Data } = await this.ao.dryrun({
+    process: params.wallet,
+    tags: [
+      {name: 'Action', value: 'GetMultisigSettings'}
+    ]
+  })
+  return { id, ...JSON.parse(Data) }
+}
+
 
 }

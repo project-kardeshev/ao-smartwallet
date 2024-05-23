@@ -1,6 +1,8 @@
 local json = require("json")
 local ao = require("ao")
 
+Owner = Owner or ao.process.Owner
+
 SmartWalletModule = SmartWalletModule or ao.process.Tags.SmartWalletModule
 
 
@@ -45,6 +47,10 @@ Handlers.add("CreateWallet", Handlers.utils.hasMatchingTag("Action", "CreateWall
             Type = "Wallet",
         }
     })
+
+    Signers[owner] = Signers[owner] or {}
+    table.insert(Signers[owner], msg.Id)
+
 end)
 
 -- Utility used by the wallet process to updat the registry with new signers and threshold
@@ -54,13 +60,27 @@ Handlers.add("UpdateMultisigSettings", Handlers.utils.hasMatchingTag("Action", "
     assert(Wallets[wallet], "Wallet not found: " .. wallet)
     assert(settings.signers, "No signers found in multisig settings")
     assert(settings.threshold, "No threshold found in multisig settings")
+
+    -- remove old signers
+    -- just remove them all, then add the new ones back in
+    for i, w in ipairs(Wallets[wallet].multisig.signers) do
+        Signers[w] = nil
+        
+    end
+
     Wallets[wallet].multisig = settings
+
+    -- update signer list in registry with new wallets
+    for i, s in ipairs(settings.signers) do
+        table.insert(Signers[s], s)
+    end
+
 end)
 
 Handlers.add("RemoveWallet", Handlers.utils.hasMatchingTag("Action", "RemoveWallet"), function(msg)
     local wallet = msg.Wallet
     local signer = msg.From
-    assert(Wallets[wallet], "Wallet not found: " .. wallet)
+    assert(Wallets[wallet], "Wallet not found in the callers list of wallets: " .. wallet)
     assert(Signers[signer], "No signer found in message")
     
     for i, w in ipairs(Signers[signer]) do
@@ -69,4 +89,13 @@ Handlers.add("RemoveWallet", Handlers.utils.hasMatchingTag("Action", "RemoveWall
         end
     end
 
+end)
+
+Handlers.add("SetSmartWalletModule", Handlers.utils.hasMatchingTag("Action", "SetSmartWalletModule"), function(msg)
+    local id = msg.SmartWalletModule
+    local signer = msg.From
+    assert(id, "No SmartWalletModule found in message")
+    assert(signer == Owner, "Only the owner can set the SmartWalletModule")
+    
+    SmartWalletModule = id
 end)

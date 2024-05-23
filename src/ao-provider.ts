@@ -48,4 +48,20 @@ export class AoProvider implements AoClient {
     this.scheduler = scheduler;
     this.ao = connect(connectConfig);
   }
+
+  /**
+   * 
+   * @param params process: string, args: Record<string, unknown>
+   * @returns the raw data returned by the process
+   */
+  async readData(params: {process: string, data?: string} & Record<string, unknown>) {
+    const {process, data, ...args} = params;
+    const {Messages} = await this.ao.dryrun({
+      process,
+      data,
+      tags: Object.entries(args).map(([name, value]) => ({name, value}))
+    });
+
+    return Messages[0].Data
+  }
 }
